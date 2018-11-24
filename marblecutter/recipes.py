@@ -42,7 +42,10 @@ def apply(recipes, pixels, expand, source=None):
             data.mask = data.mask | mask
 
             colormap = None
-
+    if "min" in recipes:
+        dtype_min = int(recipes["min"])
+    if "max" in recipes:
+        dtype_max = int(recipes["max"])
     if "landsat8" in recipes:
         LOG.info("Applying landsat 8 recipe")
 
