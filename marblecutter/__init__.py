@@ -281,8 +281,9 @@ def read_window(src, bounds, target_shape, source):
             mask = geometry_mask(
                 [geom_mask], target_shape, transform=mask_transform, invert=True
             )
-
-        if any([ColorInterp.alpha in vrt.colorinterp]):
+        # Since no data can be more valid than the alpha band, prioritize it
+        # TODO: Allow for this to be passed as a preference
+        if any([ColorInterp.alpha in vrt.colorinterp]) and src_nodata is None:
             alpha_idx = vrt.colorinterp.index(ColorInterp.alpha)
             mask = [~data[alpha_idx] | mask] * (vrt.count - 1)
             bands = [data[i] for i in range(0, vrt.count) if i != alpha_idx]
