@@ -21,8 +21,6 @@ LOG = logging.getLogger(__name__)
 def apply(recipes, pixels, expand, source=None):
     data = pixels.data
     colormap = pixels.colormap
-    dtype_min = np.iinfo(data.dtype).min
-    dtype_max = np.iinfo(data.dtype).max
 
     if data.shape[0] == 1:
         if expand and colormap:
@@ -42,10 +40,17 @@ def apply(recipes, pixels, expand, source=None):
             data.mask = data.mask | mask
 
             colormap = None
-    if "min" in recipes:
-        dtype_min = int(recipes["min"])
-    if "max" in recipes:
-        dtype_max = int(recipes["max"])
+
+    # Allow the caller to specify the destination min/max, useful for stuff that can't render
+    if "dst_min" in recipes:
+        dtype_min = float(recipes["dst_min"])
+    else:
+        dtype_min = np.iinfo(data.dtype).min
+    if "dst_max" in recipes:
+        dtype_max = float(recipes["dst_max"])
+    else:
+        dtype_max = np.iinfo(data.dtype).max
+
     if "landsat8" in recipes:
         LOG.info("Applying landsat 8 recipe")
 
