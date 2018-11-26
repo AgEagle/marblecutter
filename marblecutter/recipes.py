@@ -177,6 +177,10 @@ def apply(recipes, pixels, expand, source=None):
         # for int*s)
         if not np.issubdtype(data.dtype, np.floating):
             data = data.astype(np.float32) / np.iinfo(data.dtype).max
+    
+    # Sometimes the caller will want integers instead of 
+    if "force_cast" in recipes:
+        data = data.astype(np.dtype(recipes["force_cast"]))
 
     return PixelCollection(data, pixels.bounds, None, colormap)
 
