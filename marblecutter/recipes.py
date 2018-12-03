@@ -114,7 +114,7 @@ def apply(recipes, pixels, expand, source=None):
         if "linear_stretch" in recipes and recipes["linear_stretch"] == "if_needed":
             skip_stretch = data.dtype == np.uint8
             recipes["linear_stretch"] = "per_band"
-        if "lienear_stretch" in recipes and not skip_stretch:
+        if "linear_stretch" in recipes and not skip_stretch:
             if recipes["linear_stretch"] == "global":
                 data = utils.linear_rescale(
                     data,
