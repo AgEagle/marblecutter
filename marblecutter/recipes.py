@@ -110,8 +110,10 @@ def apply(recipes, pixels, expand, source=None):
             # TODO use band 4 as an alpha channel if colorinterp == alpha instead
             # TODO re-order channels if BGR (whatever colorinterp says)
             data = data[0:3]
-
-        if "linear_stretch" in recipes:
+        skip_stretch = False
+        if "linear_stretch" in recipes and recipes["linear_stretch"] == "if_needed":
+            skip_stretch = data.dtype == np.uint8
+        if "lienear_stretch" in recipes and not skip_stretch:
             if recipes["linear_stretch"] == "global":
                 data = utils.linear_rescale(
                     data,
