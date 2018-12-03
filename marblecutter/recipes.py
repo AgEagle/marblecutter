@@ -127,7 +127,7 @@ def apply(recipes, pixels, expand, source=None):
                         "max", np.max(data[band])
                     )
                     data[band] = np.ma.where(
-                        data[band] > 0,
+                        data[band] >= min_val,
                         utils.linear_rescale(
                             data[band],
                             in_range=(min_val, max_val),
