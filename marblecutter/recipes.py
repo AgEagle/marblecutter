@@ -175,7 +175,7 @@ def apply(recipes, pixels, expand, source=None):
 
         # normalize to 0..1 based on the range of the source type (only
         # for int*s)
-        if not np.issubdtype(data.dtype, np.floating):
+        if not np.issubdtype(data.dtype, np.floating) and data.dtype != np.uint8:
             data = data.astype(np.float32) / np.iinfo(data.dtype).max
     
     # Sometimes the caller will want integers instead of 
