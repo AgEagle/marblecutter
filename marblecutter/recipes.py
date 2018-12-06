@@ -115,7 +115,7 @@ def apply(recipes, pixels, expand, source=None):
             skip_stretch = data.dtype == np.uint8
             recipes["linear_stretch"] = "per_band"
         if "linear_stretch" in recipes and not skip_stretch:
-            import pdb; pdb.set_trace()
+            
             if recipes["linear_stretch"] == "global":
                 data = utils.linear_rescale(
                     data,
