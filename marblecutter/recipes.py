@@ -115,6 +115,7 @@ def apply(recipes, pixels, expand, source=None):
             skip_stretch = data.dtype == np.uint8
             recipes["linear_stretch"] = "per_band"
         if "linear_stretch" in recipes and not skip_stretch:
+            import pdb; pdb.set_trace()
             if recipes["linear_stretch"] == "global":
                 data = utils.linear_rescale(
                     data,
@@ -176,10 +177,11 @@ def apply(recipes, pixels, expand, source=None):
             # likely greyscale image; use the same band on all channels
             data = np.ma.array([data[0], data[0], data[0]])
 
-        # normalize to 0..1 based on the range of the source type (only
-        # for int*s)
-        if not np.issubdtype(data.dtype, np.floating) and data.dtype != np.uint8:
-            data = data.astype(np.float32) / np.iinfo(data.dtype).max
+        # I don't think this is useful to do in all situations - Paul S.
+        # # normalize to 0..1 based on the range of the source type (only
+        # # for int*s)
+        # if not np.issubdtype(data.dtype, np.floating) and data.dtype != np.uint8:
+        #     data = data.astype(np.float32) / np.iinfo(data.dtype).max
     
     # Sometimes the caller will want integers instead of 
     if "force_cast" in recipes:
