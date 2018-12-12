@@ -124,10 +124,10 @@ def apply(recipes, pixels, expand, source=None):
                 )
             elif recipes["linear_stretch"] == "per_band":
                 for band in range(0, data.shape[0]):
-                    min_val = source.meta.get("values", {}).get(band, {}).get(
+                    min_val = source.meta.get("values", {}).get(recipes["rgb_bands"][band] - 1, {}).get(
                         "min", np.min(data[band])
                     )
-                    max_val = source.meta.get("values", {}).get(band, {}).get(
+                    max_val = source.meta.get("values", {}).get(recipes["rgb_bands"][band] - 1, {}).get(
                         "max", np.max(data[band])
                     )
                     data[band] = np.ma.where(
