@@ -21,7 +21,7 @@ LOG = logging.getLogger(__name__)
 def apply(recipes, pixels, expand, source=None):
     data = pixels.data
     colormap = pixels.colormap
-
+    
     if data.shape[0] == 1:
         if expand and colormap:
             # create a lookup table from the source's color map
@@ -90,12 +90,8 @@ def apply(recipes, pixels, expand, source=None):
                 min_val = max(min_val, local_min)
                 max_val = min(max_val, local_max)
 
-            out[bdx] = np.ma.where(
-                band_data > 0,
-                utils.linear_rescale(
-                    band_data, in_range=[min_val, max_val], out_range=[0, 1]
-                ),
-                0,
+            out[bdx] = utils.linear_rescale(
+                band_data, in_range=(min_val, max_val), out_range=(0.0, 1.0)
             )
 
         data = out
@@ -104,7 +100,9 @@ def apply(recipes, pixels, expand, source=None):
         LOG.info("Applying imagery recipe")
 
         if "rgb_bands" in recipes:
-            data = np.ma.array([data[i - 1] for i in recipes["rgb_bands"]])
+            data = np.ma.array(
+                [data[i - 1] for i in recipes["rgb_bands"] if data.shape[0] >= i]
+            )
         elif data.shape[0] > 3:
             # alpha(?) band (and beyond) present; drop it (them)
             # TODO use band 4 as an alpha channel if colorinterp == alpha instead
@@ -118,11 +116,11 @@ def apply(recipes, pixels, expand, source=None):
             
             if recipes["linear_stretch"] == "global":
                 data = utils.linear_rescale(
-                    data,
-                    in_range=(np.min(data), np.max(data)),
-                    out_range=(dtype_min, dtype_max),
+                    data, in_range=(np.min(data), np.max(data)), out_range=(0.0, 1.0)
                 )
             elif recipes["linear_stretch"] == "per_band":
+                out = np.ma.empty(shape=(data.shape), dtype=np.float32)
+
                 for band in range(0, data.shape[0]):
                     min_val = source.meta.get("values", {}).get(recipes["rgb_bands"][band] - 1, {}).get(
                         "min", np.min(data[band])
@@ -139,10 +137,17 @@ def apply(recipes, pixels, expand, source=None):
                         ),
                         0,
                     )
+                    # TODO: Decide if this is better
+                    # out[band] = utils.linear_rescale(
+                    #     data[band], in_range=(min_val, max_val), out_range=(0.0, 1.0)
+
+                data = out
         else:
             # rescale after reducing and before increasing dimensionality
-            if data.dtype != np.uint8 and not np.issubdtype(data.dtype, np.floating):
-                # rescale non-8-bit sources (assuming that they're raw sensor data)
+            if data.dtype != np.uint8:
+                # rescale non-8-bit sources (assuming that they're raw sensor
+                # data) and normalize to 0..1
+                out = np.ma.empty(shape=(data.shape), dtype=np.float32)
 
                 for band in range(0, data.shape[0]):
                     min_val = source.meta.get("values", {}).get(band, {}).get(
@@ -163,29 +168,25 @@ def apply(recipes, pixels, expand, source=None):
                         min_val = max(min_val, local_min)
                         max_val = min(max_val, local_max)
 
-                    data[band] = np.ma.where(
-                        data[band] > 0,
-                        utils.linear_rescale(
-                            data[band],
-                            in_range=(min_val, max_val),
-                            out_range=(dtype_min, dtype_max),
-                        ),
-                        0,
+                    out[band] = utils.linear_rescale(
+                        data[band], in_range=(min_val, max_val), out_range=(0.0, 1.0)
                     )
+
+                data = out
+
+        if not np.issubdtype(data.dtype, np.floating):
+            # normalize to 0..1 based on the range of the source type (only
+            # for int*s)
+            data = data.astype(np.float32) / dtype_max
 
         if data.shape[0] == 1:
             # likely greyscale image; use the same band on all channels
             data = np.ma.array([data[0], data[0], data[0]])
 
-        # I don't think this is useful to do in all situations - Paul S.
-        # # normalize to 0..1 based on the range of the source type (only
-        # # for int*s)
-        # if not np.issubdtype(data.dtype, np.floating) and data.dtype != np.uint8:
-        #     data = data.astype(np.float32) / np.iinfo(data.dtype).max
-    
     # Sometimes the caller will want integers instead of 
     if "force_cast" in recipes:
         data = data.astype(np.dtype(recipes["force_cast"]))
+
 
     return PixelCollection(data, pixels.bounds, None, colormap)
 

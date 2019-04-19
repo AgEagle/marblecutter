@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-version = "0.3.1"
+version = "0.4.0rc1"
 
 setup(
     name="marblecutter",
@@ -15,7 +15,6 @@ setup(
     package_data={"marblecutter": ["static/images/*", "templates/*"]},
     install_requires=[
         "future",
-        "futures",
         "haversine",
         "mercantile",
         "numpy",
@@ -23,16 +22,14 @@ setup(
         "rasterio[s3]>=1.0.9",
         "requests",
         "rio-pansharpen ~= 0.2.0",
-        # TODO upgrade me
-        "rio-tiler ~= 0.0.3",
+        "rio-tiler",
         "rio-toa",
     ],
-    # dependency_links=[
-    #     'https://github.com/mapbox/rasterio/archive/master.tar.gz#egg=rasterio[s3]',
-    # ],
     extras_require={
         "color_ramp": "matplotlib",
         "postgis": "psycopg2",
-        "web": ["flask", "flask-cors"],
+        "web": ["flask"],
+        # TODO eventually move to environment markers, per https://hynek.me/articles/conditional-python-dependencies/
+        ":python_version<'3.0'": ["futures"],
     },
 )

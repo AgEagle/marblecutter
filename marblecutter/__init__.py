@@ -66,6 +66,10 @@ class NoDataAvailable(Exception):
     pass
 
 
+class DataReadFailed(Exception):
+    pass
+
+
 def _isimage(data_format):
     return data_format.upper() in ["RGB", "RGBA"]
 
@@ -237,7 +241,7 @@ def read_window(src, bounds, target_shape, source):
         resampling = Resampling[source.recipes.get("resample", "bilinear")]
 
     src_nodata = source.recipes.get("nodata", source.meta.get("nodata", src.nodata))
-    add_alpha = False
+    add_alpha = True
 
     if (
         any([MaskFlags.per_dataset in flags for flags in src.mask_flag_enums])
@@ -245,7 +249,12 @@ def read_window(src, bounds, target_shape, source):
     ):
         # prefer the mask if available
         src_nodata = None
-        add_alpha = True
+
+    if (
+        any([MaskFlags.alpha in flags for flags in src.mask_flag_enums])
+        or ColorInterp.alpha in src.colorinterp
+    ):
+        add_alpha = False
 
     w, s, e, n = bounds.bounds
     vrt_transform = (
@@ -285,7 +294,9 @@ def read_window(src, bounds, target_shape, source):
         # TODO: Allow for this to be passed as a preference
         if any([ColorInterp.alpha in vrt.colorinterp]) and src_nodata is None:
             alpha_idx = vrt.colorinterp.index(ColorInterp.alpha)
-            mask = [~data[alpha_idx] | mask] * (vrt.count - 1)
+            # TODO this coerces the alpha channel to a boolean mask; it should
+            # eventually be used *as alpha*, setting transparency
+            mask = [~data[alpha_idx].astype(np.bool) | mask] * (vrt.count - 1)
             bands = [data[i] for i in range(0, vrt.count) if i != alpha_idx]
             data = np.ma.masked_array(bands, mask=mask)
         else:
@@ -340,7 +351,7 @@ def render(
         )
     stats.append(("Composite", t.elapsed))
 
-    if pixels.data is None:
+    if pixels is None or pixels.data is None:
         raise NoDataAvailable()
 
     data_format = "raw"
