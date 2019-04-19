@@ -128,7 +128,7 @@ def apply(recipes, pixels, expand, source=None):
                     max_val = source.meta.get("values", {}).get(recipes["rgb_bands"][band] - 1, {}).get(
                         "max", np.max(data[band])
                     )
-                    data[band] = np.ma.where(
+                    out[band] = np.ma.where(
                         data[band] >= min_val,
                         utils.linear_rescale(
                             data[band],
@@ -137,9 +137,10 @@ def apply(recipes, pixels, expand, source=None):
                         ),
                         0,
                     )
-                    # TODO: Decide if this is better
+                    # TODO: Decide if this is better, uncomment #1 below if that's the decsion
                     # out[band] = utils.linear_rescale(
                     #     data[band], in_range=(min_val, max_val), out_range=(0.0, 1.0)
+                    # )
 
                 data = out
         else:
@@ -173,11 +174,11 @@ def apply(recipes, pixels, expand, source=None):
                     )
 
                 data = out
-
-        if not np.issubdtype(data.dtype, np.floating):
-            # normalize to 0..1 based on the range of the source type (only
-            # for int*s)
-            data = data.astype(np.float32) / dtype_max
+        # TODO:#1 Get this functional 
+        # if not np.issubdtype(data.dtype, np.floating):
+        #     # normalize to 0..1 based on the range of the source type (only
+        #     # for int*s)
+        #     data = data.astype(np.float32) / dtype_max
 
         if data.shape[0] == 1:
             # likely greyscale image; use the same band on all channels
