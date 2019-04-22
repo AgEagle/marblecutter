@@ -14,8 +14,11 @@ LOG = logging.getLogger(__name__)
 bp = Blueprint("marblecutter", __name__)
 
 
+def get_host():
+    return request.headers.get("X-Forwarded-Host", request.headers.get("Host", ""))
+
 def make_prefix():
-    host = request.headers.get("X-Forwarded-Host", request.headers.get("Host", ""))
+    host = get_host()
 
     # sniff for API Gateway
     if ".execute-api." in host and ".amazonaws.com" in host:
