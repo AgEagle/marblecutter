@@ -20,9 +20,6 @@ def make_prefix():
     # sniff for API Gateway
     if ".execute-api." in host and ".amazonaws.com" in host:
         return request.headers.get("X-Stage")
-    else:
-        return host
-
 
 # API Gateway prefix-aware url_for
 def url_for(*args, **kwargs):
