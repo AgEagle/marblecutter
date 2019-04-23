@@ -58,6 +58,9 @@ class InvalidTileRequest(Exception):
         return rv
 
 
+class DataReadFailed(Exception):
+    pass
+
 class NoCatalogAvailable(Exception):
     pass
 

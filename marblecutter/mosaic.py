@@ -68,10 +68,11 @@ def composite(sources, bounds, shape, target_crs, expand):
             try:
                 window_data = read_window(src, canvas_bounds, shape, source)
             except Exception as e:
-                LOG.exception("Error reading %s: %s", source.url, e)
-                return (
-                    source, PixelCollection(None, canvas_bounds, source.band, colormap)
-                )
+                from . import DataReadFailed
+
+                raise DataReadFailed(
+                    "Error reading {}: {}".format(source.url, str(e))
+                ) 
 
             return (
                 source,
