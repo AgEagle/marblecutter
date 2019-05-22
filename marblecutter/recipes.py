@@ -12,7 +12,11 @@ from rio_pansharpen.methods import Brovey
 from rio_tiler import utils
 from rio_toa import reflectance
 
-from .utils import PixelCollection, Source, make_colormap
+# Used for color ramps
+import matplotlib.pyplot as plt
+
+from .utils import PixelCollection, Source
+import re;
 
 BAND_MAPPING = {"r": 0, "g": 1, "b": 2, "pan": 4}
 LOG = logging.getLogger(__name__)
@@ -35,21 +39,23 @@ def apply(recipes, pixels, expand, source=None):
     
     if data.shape[0] == 1:
         if expand and colormap:
-            # create a lookup table from the source's color map
-            lut = make_colormap(colormap)
-
             # stash the mask
             mask = data.mask
-
-            # apply the color map
-            data = lut[data[0], :]
+            colormap = plt.get_cmap(colormap)
+            data = (data.astype(np.float32) - dtype_min) / dtype_max
+            data = colormap(data) 
+            data = np.uint8(data * 255)
 
             # re-shape to match band-style
-            data = np.ma.transpose(data, [2, 0, 1])
+            data = np.transpose(data[0], [2, 0, 1])
+            # TODO: Figure out a better way to check
+            if np.any(mask):
+                data = np.ma.masked_array(data[0:3], [mask, mask, mask])
+            else:
+                data = np.ma.masked_array(data[0:3])
 
             # re-apply the mask, merging it with pixels that were masked by the color map
-            data.mask = data.mask | mask
-
+            # data.mask = data.mask | mask
             colormap = None
 
     if "landsat8" in recipes:
