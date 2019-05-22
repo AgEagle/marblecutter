@@ -28,6 +28,11 @@ def apply(recipes, pixels, expand, source=None):
         dtype_min = np.iinfo(data.dtype).min
         dtype_max = np.iinfo(data.dtype).max
 
+    if "dst_min" in recipes:
+        dtype_min = float(recipes["dst_min"])
+    if "dst_max" in recipes:
+        dtype_max = float(recipes["dst_max"])
+    
     if data.shape[0] == 1:
         if expand and colormap:
             # create a lookup table from the source's color map
@@ -46,12 +51,6 @@ def apply(recipes, pixels, expand, source=None):
             data.mask = data.mask | mask
 
             colormap = None
-
-    # Allow the caller to specify the destination min/max, useful for stuff that can't render
-    if "dst_min" in recipes:
-        dtype_min = float(recipes["dst_min"])
-    if "dst_max" in recipes:
-        dtype_max = float(recipes["dst_max"])
 
     if "landsat8" in recipes:
         LOG.info("Applying landsat 8 recipe")
