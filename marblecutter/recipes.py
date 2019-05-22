@@ -131,12 +131,18 @@ def apply(recipes, pixels, expand, source=None):
                 )
             elif recipes["linear_stretch"] == "per_band":
                 for band in range(0, data.shape[0]):
-                    min_val = source.meta.get("values", {}).get(recipes["rgb_bands"][band] - 1, {}).get(
-                        "min", np.min(data[band])
-                    )
-                    max_val = source.meta.get("values", {}).get(recipes["rgb_bands"][band] - 1, {}).get(
-                        "max", np.max(data[band])
-                    )
+                    if "src_min" in recipes:
+                        min_val = float(recipes["src_min"][band])
+                    else:
+                        min_val = source.meta.get("values", {}).get(recipes["rgb_bands"][band] - 1, {}).get(
+                            "min", np.min(data[band])
+                        )
+                    if "src_max" in recipes:
+                        max_val = float(recipes["src_max"][band])
+                    else:
+                        max_val = source.meta.get("values", {}).get(recipes["rgb_bands"][band] - 1, {}).get(
+                            "max", np.max(data[band])
+                        )
                     data[band] = np.ma.where(
                         data[band] >= min_val,
                         utils.linear_rescale(
