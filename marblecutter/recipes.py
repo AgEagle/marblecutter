@@ -36,7 +36,7 @@ def apply(recipes, pixels, expand, source=None):
         m = re.search("band_(\d+)", recipes["band_math"])
         if m:
             band_number = int(m.groups()[0])
-            data = np.ma.array([data[band_number]])
+            data = np.ma.array([data[band_number-1]])
     if "dst_min" in recipes:
         dtype_min = float(recipes["dst_min"])
     if "dst_max" in recipes:
