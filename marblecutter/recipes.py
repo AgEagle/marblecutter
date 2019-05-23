@@ -106,11 +106,18 @@ def apply(recipes, pixels, expand, source=None):
             skip_stretch = data.dtype == np.uint8
             recipes["linear_stretch"] = "per_band"
         if "linear_stretch" in recipes and not skip_stretch:
-            
             if recipes["linear_stretch"] == "global":
+                if "src_min" in recipes:
+                    min_val = float(recipes["src_min"][band])
+                else:
+                    min_val = np.min(data)
+                if "src_max" in recipes:
+                    max_val = float(recipes["src_max"][band])
+                else:
+                    max_val = np.max(data)
                 data = utils.linear_rescale(
                     data,
-                    in_range=(np.min(data), np.max(data)),
+                    in_range=(min_val, max_val),
                     out_range=(dtype_min, dtype_max),
                 )
             elif recipes["linear_stretch"] == "per_band":
