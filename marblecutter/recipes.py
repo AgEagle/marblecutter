@@ -41,27 +41,6 @@ def apply(recipes, pixels, expand, source=None):
         dtype_min = float(recipes["dst_min"])
     if "dst_max" in recipes:
         dtype_max = float(recipes["dst_max"])
-    
-    if data.shape[0] == 1:
-        if expand and colormap:
-            # stash the mask
-            mask = data.mask
-            colormap = plt.get_cmap(colormap)
-            data = (data.astype(np.float32) - dtype_min) / dtype_max
-            data = colormap(data) 
-            data = np.uint8(data * 255)
-
-            # re-shape to match band-style
-            data = np.transpose(data[0], [2, 0, 1])
-            # TODO: Figure out a better way to check
-            if np.any(mask):
-                data = np.ma.masked_array(data[0:3], [mask, mask, mask])
-            else:
-                data = np.ma.masked_array(data[0:3])
-
-            # re-apply the mask, merging it with pixels that were masked by the color map
-            # data.mask = data.mask | mask
-            colormap = None
 
     if "landsat8" in recipes:
         LOG.info("Applying landsat 8 recipe")
@@ -190,7 +169,28 @@ def apply(recipes, pixels, expand, source=None):
                         ),
                         0,
                     )
+        
+        if data.shape[0] == 1:
+            if expand and colormap:
+                # stash the mask
+                mask = data.mask
+                colormap = plt.get_cmap(colormap)
+                data = 10.0 * (data.astype(np.float32) - dtype_min) / dtype_max
+                data = colormap(data) 
+                data = np.uint8(data * 255)
 
+                # re-shape to match band-style
+                data = np.transpose(data[0], [2, 0, 1])
+                # TODO: Figure out a better way to check
+                if np.any(mask):
+                    data = np.ma.masked_array(data[0:3], [mask, mask, mask])
+                else:
+                    data = np.ma.masked_array(data[0:3])
+
+                # re-apply the mask, merging it with pixels that were masked by the color map
+                # data.mask = data.mask | mask
+                recipes["rgb_bands"] = [1,2,3]
+                colormap = None
         if data.shape[0] == 1:
             # likely greyscale image; use the same band on all channels
             data = np.ma.array([data[0], data[0], data[0]])
