@@ -182,6 +182,8 @@ def apply(recipes, pixels, expand, source=None):
                 # stash the mask
                 mask = data.mask
                 colormap = plt.get_cmap(colormap)
+                LOG.info(colormap)
+                print(colormap)
                 data = 10.0 * (data.astype(np.float32) - dtype_min) / dtype_max
                 data = colormap(data) 
                 data = np.uint8(data * 255)
